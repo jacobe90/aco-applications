@@ -2,7 +2,7 @@ from sudoku import Sudoku
 from aco import propogate_constraints
 
 def main():
-    puzzle = Sudoku("aiescargot.txt")
+    puzzle = Sudoku("sabuncu1.txt")
     print("before:")
     puzzle.print_puzzle()
     while propogate_constraints(puzzle) != 0:

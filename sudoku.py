@@ -24,7 +24,6 @@ class Sudoku:
         count = 0
         for i in range(2, 2+self.d, 1):
             row = lines[i].split("\t")
-            print(row)
             for num in row:
                 n = int(num)
                 if n == -1:

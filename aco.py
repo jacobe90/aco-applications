@@ -24,12 +24,12 @@ def propogate_constraints(puzzle):
             # x = (i%9)/3
             # y = (i/9)/3
             box_index = int((i % puzzle.d) / puzzle.cell_dim) + puzzle.cell_dim * int(int(i / puzzle.d) / puzzle.cell_dim)
-            print(box_index)
+            #print(box_index)
             for x in puzzle.get_box(box_index):
                 if len(puzzle.value_sets[x]) == 1:
                     fixed_in_cell.add(puzzle.value_sets[x][0])
             # update the unit's value set
-            print(fixed_in_cell)
+            #print(fixed_in_cell)
             for f in fixed_in_cell:
                 if f in puzzle.value_sets[i]:
                     puzzle.value_sets[i].remove(f)
@@ -67,6 +67,6 @@ def propogate_constraints(puzzle):
                 if box_singleton:
                     puzzle.value_sets[i] = [v]
                     break
-        return fixed_total
+    return fixed_total
     # eliminate
     # return the number of fixed cells
