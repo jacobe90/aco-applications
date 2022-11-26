@@ -32,7 +32,10 @@ def test_all_logic_solvable():
     for sudoku in os.listdir("logic-solvable"):
         print("solving {}".format(sudoku))
         puzzle = Sudoku("logic-solvable" + "/" + sudoku)
-        aco(puzzle).print_puzzle()
+        t0 = time.time()
+        sol, niters, cp_time = aco(puzzle)
+        t1 = time.time()
+        print("solved! took {} iterations and {} seconds. cp time: {} seconds\n".format(niters, t1 - t0, cp_time))
 
 
 def test_cp():

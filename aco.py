@@ -11,6 +11,7 @@
 # Potential problems to investigate
 # math for updating pheromones could be wrong
 # constraint propagation messed up?
+import time
 
 import mpmath
 import numpy as np
@@ -43,10 +44,12 @@ def aco(puzzle):
     c = puzzle.d * puzzle.d # number of units
     d = puzzle.d # puzzle dimension
 
+    cp_time = 0
     # constraint propagation on puzzle
+    t0 = time.time()
     while propagate_constraints(puzzle)[0] != 0:
         continue
-
+    cp_time = cp_time + (time.time() - t0)
     # copy the puzzle
     best_solution = puzzle.copy()
     f_start = 0
@@ -61,7 +64,7 @@ def aco(puzzle):
     count = 0
     while not best_solution.solved():
         count += 1
-        print("Global Iteration %d" % count)
+        # print("Global Iteration %d" % count)
         # keep track of puzzles, cells set by each ant, and starting positions
         puzzle_copies = []
         cells_set = np.zeros(m)
@@ -91,11 +94,13 @@ def aco(puzzle):
                         ants_choice = np.random.choice(vs, p=probabilities)
                     copy.value_sets[cur_pos] = [ants_choice]
                     # propagate constraints
+                    t0 = time.time()
                     fixed, failed = propagate_constraints(copy)
                     #cells_set[ant_idx] += fixed
                     while fixed != 0:
                         fixed, failed = propagate_constraints(copy)
                         #cells_set[ant_idx] += fixed
+                    cp_time = cp_time + (time.time() - t0)
                     # local pheromone update
                     pheromones[cur_pos][ants_choice-1] = (1 - zeta) * pheromones[cur_pos][ants_choice-1] + zeta * tau_0
                     if ant_idx == 0:
@@ -122,7 +127,7 @@ def aco(puzzle):
         for vs in best_solution.value_sets:
             if len(vs) == 1:
                 fixed_count += 1
-        print("Best ant fixed {}/{} cells \n".format(fixed_count, c))
+        # print("Best ant fixed {}/{} cells \n".format(fixed_count, c))
         #best_solution.print_puzzle()
         # global pheromone update
         for i in range(c):
@@ -133,7 +138,7 @@ def aco(puzzle):
         # best value evaporation
         delta_tau_best = delta_tau_best * (1 - rho_bve)
 
-    return best_solution
+    return best_solution, count, cp_time
 
 
 def propagate_constraints(puzzle):
