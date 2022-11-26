@@ -40,14 +40,17 @@ def aco(puzzle):
     best_solution = puzzle.copy()
 
     # constraint propagation on puzzle
-    while propogate_constraints(best_solution)[0] != 0:
+    while propagate_constraints(best_solution)[0] != 0:
         continue
 
     # initialize global pheromone matrix
-    pheromones = np.array([c, d])
+    pheromones = np.zeros((c, d+1))
     pheromones.fill(tau_0)
 
+    count = 0
     while not best_solution.solved():
+        count += 1
+        print("Global Iteration %d" % count)
         # keep track of puzzles, cells set by each ant, and starting positions
         puzzle_copies = []
         cells_set = np.zeros(m)
@@ -60,7 +63,7 @@ def aco(puzzle):
                 # if current cell is not fixed
                 cur_pos = (initial_positions[ant_idx] + iter) % c
                 copy = puzzle_copies[ant_idx]
-                if len(copy.value_sets[cur_pos]) != 1:
+                if len(copy.value_sets[cur_pos]) > 1:
                     # choose value
                     vs = copy.value_sets[cur_pos]
                     q = random.uniform(0, 1)
@@ -73,12 +76,12 @@ def aco(puzzle):
                             sum += pheromones[cur_pos][x]
                         probabilities = [pheromones[cur_pos][x]/sum for x in vs]
                         ants_choice = np.random.choice(vs, p=probabilities)
-                    puzzle.value_sets[cur_pos] = [ants_choice]
+                    copy.value_sets[cur_pos] = [ants_choice]
                     # propagate constraints
-                    fixed, failed = propogate_constraints(puzzle)
+                    fixed, failed = propagate_constraints(copy)
                     cells_set[ant_idx] += (fixed - failed)
                     while fixed != 0:
-                        fixed, failed = propogate_constraints(puzzle)
+                        fixed, failed = propagate_constraints(copy)
                         cells_set[ant_idx] += (fixed - failed)
                     # local pheromone update
                     pheromones[cur_pos][ants_choice] = (1 - zeta) * pheromones[cur_pos][ants_choice] + zeta * tau_0
@@ -89,6 +92,12 @@ def aco(puzzle):
             best_solution = puzzle_copies[np.argmax(cells_set)]
             delta_tau_best = delta_tau
 
+        fixed_count = 0
+        for vs in best_solution.value_sets:
+            if len(vs) == 1:
+                fixed_count += 1
+        print("Best ant fixed {}/{} cells \n".format(fixed_count, c))
+
         # global pheromone update
         for i in range(c):
             if len(best_solution.value_sets[i]) == 1:
@@ -98,8 +107,9 @@ def aco(puzzle):
         # best value evaporation
         delta_tau_best = delta_tau_best * (1 - rho_bve)
 
+    return best_solution
 
-def propogate_constraints(puzzle):
+def propagate_constraints(puzzle):
     # loop through all units
     # if the unit is already fixed, continue
     fixed_total = 0

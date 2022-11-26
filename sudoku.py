@@ -51,7 +51,7 @@ class Sudoku:
             for x in range(1, self.d+1):
                 found_x = False
                 for vs in row:
-                    if vs.length != 1:
+                    if len(vs) != 1:
                         return False
                     if vs[0] == x:
                         found_x = True
@@ -63,7 +63,7 @@ class Sudoku:
             for x in range(1, self.d + 1):
                 found_x = False
                 for vs in col:
-                    if vs.length != 1:
+                    if len(vs) != 1:
                         return False
                     if vs[0] == x:
                         found_x = True
@@ -75,7 +75,7 @@ class Sudoku:
             for x in range(1, self.d + 1):
                 found_x = False
                 for vs in box:
-                    if vs.length != 1:
+                    if len(vs) != 1:
                         return False
                     if vs[0] == x:
                         found_x = True
