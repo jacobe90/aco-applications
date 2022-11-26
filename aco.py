@@ -5,6 +5,87 @@
 
 # SUS List
 # add get row, get column, get box functions
+# need to initialize ants to all different locations in the puzzle
+# probably best way to accomplish this is with an ant class, step function,
+# need to track fail cells when doing constraint propagation
+
+import mpmath
+import numpy as np
+import math
+import random
+
+class Ant:
+    def __int__(self, puzzle, idx):
+        self.puzzle = puzzle
+        self.idx = idx # current index of ant in the sudoku
+        self.cells_set = 0
+
+    def step():
+
+        idx += 1
+
+def aco(puzzle):
+    # set hyperparameters
+    rho = 0.9
+    q_0 = 0.9
+    rho_bve = 0.005
+    m = 10  # number of ants
+    tau_0 = 1/(puzzle.d * puzzle.d) # initial pheromone values
+    zeta = 0.1
+    delta_tau_best = 0
+
+    # puzzle parameters
+    c = puzzle.d * puzzle.d # number of units
+    d = puzzle.d # puzzle dimension
+    best_solution = puzzle.copy()
+
+    # constraint propagation on puzzle
+    while propogate_constraints(best_solution) != 0:
+        continue
+
+    # initialize global pheromone matrix
+    pheromones = np.array([c, d])
+    pheromones.fill(tau_0)
+
+    while not best_solution.solved():
+        puzzle_copies = []
+        cells_set = np.zeros(m)
+        for ant in range(0, m):
+            puzzle_copies.append(best_solution.copy())
+        for i in range(0, c):
+            for ant_idx in range(0, m):
+                # if current cell is not fixed
+                copy = puzzle_copies[ant_idx]
+                if len(copy.value_sets[i]) != 1:
+                    # choose value
+                    vs = copy.value_sets[i]
+                    q = random.uniform(0, 1)
+                    ants_choice = None
+                    if q < q_0:
+                        ants_choice = vs[np.argmax([pheromones[i][x] for x in vs])]
+                    else:
+                        sum = 0
+                        for x in vs:
+                            sum += pheromones[i][x]
+                        probabilities = [pheromones[i][x]/sum for x in vs]
+                        ants_choice = np.random.choice(vs, p=probabilities)
+                    puzzle.value_sets[i] = [ants_choice]
+                    # propagate constraints
+                    k = propogate_constraints(puzzle)
+                    cells_set[ant_idx] += k
+                    while k != 0:
+                        k = propogate_constraints(puzzle)
+                        cells_set[ant_idx] += k
+                    # local pheromone update
+                    pheromones[i][ants_choice] = (1 - zeta) * pheromones[i][ants_choice] + zeta * tau_0
+        # find best ant
+        f_best = max(cells_set)
+        delta_tau = c / (c - f_best)
+        if delta_tau > delta_tau_best:
+            best_solution = puzzle_copies[np.argmax(cells_set)]
+        # global pheromone update
+        # best value evaporation
+
 
 def propogate_constraints(puzzle):
     # loop through all units
@@ -48,6 +129,7 @@ def propogate_constraints(puzzle):
                         row_singleton = False
                 if row_singleton:
                     puzzle.value_sets[i] = [v]
+                    fixed_total += 1
                     break
 
                 # column
@@ -57,6 +139,7 @@ def propogate_constraints(puzzle):
                         column_singleton = False
                 if column_singleton:
                     puzzle.value_sets[i] = [v]
+                    fixed_total += 1
                     break
 
                 # box
@@ -66,7 +149,7 @@ def propogate_constraints(puzzle):
                         box_singleton = False
                 if box_singleton:
                     puzzle.value_sets[i] = [v]
+                    fixed_total += 1
                     break
     return fixed_total
-    # eliminate
-    # return the number of fixed cells
+

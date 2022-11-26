@@ -7,13 +7,15 @@ import numpy as np
 # TODO
 # implement game board copying
 
+
 class Sudoku:
-    def __init__(self, path):
+    def __init__(self, path, load=True):
         self.d = None
         self.cell_dim = None
         self.something = None
         self.value_sets = []
-        self.load_puzzle(path)
+        if load:
+            self.load_puzzle(path)
 
     def load_puzzle(self, path):
         with open(path, 'r') as sudoku:
@@ -31,6 +33,61 @@ class Sudoku:
                 else:
                     self.value_sets.append([int(n)])
 
+    def copy(self):
+        copy = Sudoku(None, False)
+        copy.d = self.d
+        copy.cell_dim = self.cell_dim
+        copy.something = self.something
+        copy.value_sets = []
+        for vs in self.value_sets:
+            newvs = [v for v in vs]
+            copy.value_sets.append(newvs)
+        return copy
+
+    def solved(self):
+        # check rows contain values 1-d
+        for i in range(0, self.d * self.d, self.d):
+            row = [self.value_sets[j] for j in self.get_row(i)]
+            for x in range(1, self.d+1):
+                found_x = False
+                for vs in row:
+                    if vs.length != 1:
+                        return False
+                    if vs[0] == x:
+                        found_x = True
+                if not found_x:
+                    return False
+        # check columns contain values 1-d
+        for i in range(0, self.d):
+            col = [self.value_sets[j] for j in self.get_column(i)]
+            for x in range(1, self.d + 1):
+                found_x = False
+                for vs in col:
+                    if vs.length != 1:
+                        return False
+                    if vs[0] == x:
+                        found_x = True
+                if not found_x:
+                    return False
+        # check boxes contain values 1-d
+        for i in range(0, self.d):
+            box = [self.value_sets[j] for j in self.get_box(i)]
+            for x in range(1, self.d + 1):
+                found_x = False
+                for vs in box:
+                    if vs.length != 1:
+                        return False
+                    if vs[0] == x:
+                        found_x = True
+                if not found_x:
+                    return False
+        return True
+
+    def get_row(self, i):
+        return [x for x in range(i - i % self.d, i - i % self.d + self.d, 1)]
+
+    def get_column(self, i):
+        return [x for x in range(i % self.d, self.d * self.d, self.d)]
     # top left corner of box
     # 0 + x + 9y
     # x = cell_dim * i % 3
