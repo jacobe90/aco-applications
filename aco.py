@@ -92,15 +92,28 @@ def aco(puzzle):
                     copy.value_sets[cur_pos] = [ants_choice]
                     # propagate constraints
                     fixed, failed = propagate_constraints(copy)
-                    cells_set[ant_idx] += fixed
+                    #cells_set[ant_idx] += fixed
                     while fixed != 0:
                         fixed, failed = propagate_constraints(copy)
-                        cells_set[ant_idx] += fixed
+                        #cells_set[ant_idx] += fixed
                     # local pheromone update
                     pheromones[cur_pos][ants_choice-1] = (1 - zeta) * pheromones[cur_pos][ants_choice-1] + zeta * tau_0
+                    if ant_idx == 0:
+                        num_fixed = cells_set[ant_idx]
+                        num_actually_fixed = 0
+                        for x in copy.value_sets:
+                            if len(x) == 1:
+                                num_actually_fixed += 1
+                        #copy.print_puzzle()
+                        #print("\n")
         # find best ant
-        f_best = 79
-        delta_tau = c / (c - f_best)
+        cells_set = [copy.filled() for copy in puzzle_copies]
+        f_best = max(cells_set)
+        delta_tau = 0
+        if f_best != 81:
+            delta_tau = c / (c - f_best)
+        else:
+            delta_tau = delta_tau_best + 1 # hacky
         if delta_tau > delta_tau_best:
             best_solution = puzzle_copies[np.argmax(cells_set)]
             delta_tau_best = delta_tau

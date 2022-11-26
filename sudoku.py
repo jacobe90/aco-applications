@@ -46,6 +46,13 @@ class Sudoku:
             copy.value_sets.append(newvs)
         return copy
 
+    def filled(self):
+        filled = 0
+        for vs in self.value_sets:
+            if len(vs) == 1:
+                filled += 1
+        return filled
+
     def solved(self):
         # check rows contain values 1-d
         for i in range(0, self.d * self.d, self.d):
