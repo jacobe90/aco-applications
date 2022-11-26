@@ -35,6 +35,20 @@ def test_all_logic_solvable():
         aco(puzzle).print_puzzle()
 
 
+def test_cp():
+    puzzle = Sudoku("logic-solvable/sabuncu5.txt")
+    count = 0
+    for vs in puzzle.value_sets:
+        if len(vs) == 1:
+            count += 1
+    fixed, failed = propagate_constraints(puzzle)
+    count += fixed
+    while fixed != 0:
+        print("fixed: %d cells"%fixed)
+        fixed, failed = propagate_constraints(puzzle)
+        count += fixed
+    print(count)
+
 def main():
     test_all_logic_solvable()
 

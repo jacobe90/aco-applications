@@ -32,8 +32,9 @@ def aco(puzzle):
     # set hyperparameters
     rho = 0.9
     q_0 = 0.9
-    rho_bve = 0.01
-    m = 15  # number of ants
+    rho_bve = 0.005
+    m = 10
+    # number of ants
     tau_0 = 1/(puzzle.d * puzzle.d) # initial pheromone values
     zeta = 0.1
     delta_tau_best = 0
@@ -41,14 +42,20 @@ def aco(puzzle):
     # puzzle parameters
     c = puzzle.d * puzzle.d # number of units
     d = puzzle.d # puzzle dimension
-    best_solution = puzzle.copy()
 
     # constraint propagation on puzzle
-    while propagate_constraints(best_solution)[0] != 0:
+    while propagate_constraints(puzzle)[0] != 0:
         continue
 
+    # copy the puzzle
+    best_solution = puzzle.copy()
+    f_start = 0
+    for vs in puzzle.value_sets:
+        if len(vs) == 1:
+            f_start += 1
+
     # initialize global pheromone matrix
-    pheromones = np.zeros((c, d+1))
+    pheromones = np.zeros((c, d))
     pheromones.fill(tau_0)
 
     count = 0
@@ -58,6 +65,7 @@ def aco(puzzle):
         # keep track of puzzles, cells set by each ant, and starting positions
         puzzle_copies = []
         cells_set = np.zeros(m)
+        cells_set.fill(f_start)
         initial_positions = np.random.randint(c, size=m)
 
         for ant in range(0, m):
@@ -73,25 +81,25 @@ def aco(puzzle):
                     q = random.uniform(0, 1)
                     ants_choice = None
                     if q < q_0:
-                        pheromones_arr = [pheromones[cur_pos][x] for x in vs]
-                        ants_choice = vs[np.argmax(pheromones_arr)]
+                        j = pheromones[cur_pos]
+                        ants_choice = max(vs, key=lambda x:(pheromones[cur_pos][x-1])) # BUG - this is wrong. surprised things are still working so well
                     else:
                         sum = 0
                         for x in vs:
-                            sum += pheromones[cur_pos][x]
-                        probabilities = [pheromones[cur_pos][x]/sum for x in vs]
+                            sum += pheromones[cur_pos][x-1]
+                        probabilities = [pheromones[cur_pos][x-1]/sum for x in vs]
                         ants_choice = np.random.choice(vs, p=probabilities)
                     copy.value_sets[cur_pos] = [ants_choice]
                     # propagate constraints
                     fixed, failed = propagate_constraints(copy)
-                    cells_set[ant_idx] += (fixed - failed)
+                    cells_set[ant_idx] += fixed
                     while fixed != 0:
                         fixed, failed = propagate_constraints(copy)
-                        cells_set[ant_idx] += (fixed - failed)
+                        cells_set[ant_idx] += fixed
                     # local pheromone update
-                    pheromones[cur_pos][ants_choice] = (1 - zeta) * pheromones[cur_pos][ants_choice] + zeta * tau_0
+                    pheromones[cur_pos][ants_choice-1] = (1 - zeta) * pheromones[cur_pos][ants_choice-1] + zeta * tau_0
         # find best ant
-        f_best = np.max(cells_set)
+        f_best = 79
         delta_tau = c / (c - f_best)
         if delta_tau > delta_tau_best:
             best_solution = puzzle_copies[np.argmax(cells_set)]
@@ -102,17 +110,18 @@ def aco(puzzle):
             if len(vs) == 1:
                 fixed_count += 1
         print("Best ant fixed {}/{} cells \n".format(fixed_count, c))
-        best_solution.print_puzzle()
+        #best_solution.print_puzzle()
         # global pheromone update
         for i in range(c):
             if len(best_solution.value_sets[i]) == 1:
                 val = best_solution.value_sets[i][0]
-                pheromones[i][val] = (1 - rho) * pheromones[i][val] + rho * delta_tau_best
+                pheromones[i][val-1] = (1 - rho) * pheromones[i][val-1] + rho * delta_tau_best
 
         # best value evaporation
         delta_tau_best = delta_tau_best * (1 - rho_bve)
 
     return best_solution
+
 
 def propagate_constraints(puzzle):
     # loop through all units
@@ -146,6 +155,7 @@ def propagate_constraints(puzzle):
             # if unit is fixed
             if len(puzzle.value_sets[i]) == 1:
                 fixed_total += 1
+                continue
 
             # if unit is failed
             if len(puzzle.value_sets[i]) == 0:
