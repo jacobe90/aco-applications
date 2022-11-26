@@ -1,6 +1,9 @@
+import os
+
 from sudoku import Sudoku
 from aco import propagate_constraints, aco
 import time
+
 
 def sabuncu_initial_test():
     puzzle = Sudoku("sabuncu1.txt")
@@ -24,8 +27,16 @@ def aco_initial_test():
     aco(puzzle).print_puzzle()
 
 
+def test_all_logic_solvable():
+    s = os.listdir("logic-solvable")
+    for sudoku in os.listdir("logic-solvable"):
+        print("solving {}".format(sudoku))
+        puzzle = Sudoku("logic-solvable" + "/" + sudoku)
+        aco(puzzle).print_puzzle()
+
+
 def main():
-    aco_initial_test()
+    test_all_logic_solvable()
 
 
 if __name__ == "__main__":

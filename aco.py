@@ -8,6 +8,10 @@
 # need to initialize ants to all different locations in the puzzle DONE
 # need to track fail cells when doing constraint propagation DONE
 
+# Potential problems to investigate
+# math for updating pheromones could be wrong
+# constraint propagation messed up?
+
 import mpmath
 import numpy as np
 import math
@@ -28,8 +32,8 @@ def aco(puzzle):
     # set hyperparameters
     rho = 0.9
     q_0 = 0.9
-    rho_bve = 0.005
-    m = 10  # number of ants
+    rho_bve = 0.01
+    m = 15  # number of ants
     tau_0 = 1/(puzzle.d * puzzle.d) # initial pheromone values
     zeta = 0.1
     delta_tau_best = 0
@@ -57,7 +61,7 @@ def aco(puzzle):
         initial_positions = np.random.randint(c, size=m)
 
         for ant in range(0, m):
-            puzzle_copies.append(best_solution.copy())
+            puzzle_copies.append(puzzle.copy())
         for iter in range(0, c):
             for ant_idx in range(0, m):
                 # if current cell is not fixed
@@ -69,7 +73,8 @@ def aco(puzzle):
                     q = random.uniform(0, 1)
                     ants_choice = None
                     if q < q_0:
-                        ants_choice = vs[np.argmax([pheromones[cur_pos][x] for x in vs])]
+                        pheromones_arr = [pheromones[cur_pos][x] for x in vs]
+                        ants_choice = vs[np.argmax(pheromones_arr)]
                     else:
                         sum = 0
                         for x in vs:
@@ -97,7 +102,7 @@ def aco(puzzle):
             if len(vs) == 1:
                 fixed_count += 1
         print("Best ant fixed {}/{} cells \n".format(fixed_count, c))
-
+        best_solution.print_puzzle()
         # global pheromone update
         for i in range(c):
             if len(best_solution.value_sets[i]) == 1:

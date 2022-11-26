@@ -27,6 +27,8 @@ class Sudoku:
         for i in range(2, 2+self.d, 1):
             row = lines[i].split("\t")
             for num in row:
+                if num == '\n':
+                    continue
                 n = int(num)
                 if n == -1:
                     self.value_sets.append([z for z in range(1, self.d+1)])
