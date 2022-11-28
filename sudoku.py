@@ -102,8 +102,9 @@ class Sudoku:
     # x = cell_dim * i % 3
     # y = cell_dim * i / 3
     def get_box(self, i):
+        box_index = int((i % self.d) / self.cell_dim) + self.cell_dim * int(int(i / self.d) / self.cell_dim)
         box = []
-        box_start = self.cell_dim * (i % self.cell_dim) + self.d * self.cell_dim * int(i / self.cell_dim)
+        box_start = self.cell_dim * (box_index % self.cell_dim) + self.d * self.cell_dim * int(box_index / self.cell_dim)
         for row in range(0, self.cell_dim):
             for x in range(box_start + 9*row, box_start + 9*row + self.cell_dim):
                 box.append(x)

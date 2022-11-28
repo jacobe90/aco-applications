@@ -47,8 +47,7 @@ def aco(puzzle):
     cp_time = 0
     # constraint propagation on puzzle
     t0 = time.time()
-    while propagate_constraints(puzzle)[0] != 0:
-        continue
+    propagate_constraints(puzzle, 0)
     cp_time = cp_time + (time.time() - t0)
     # copy the puzzle
     best_solution = puzzle.copy()
@@ -64,7 +63,6 @@ def aco(puzzle):
     count = 0
     while not best_solution.solved():
         count += 1
-        # print("Global Iteration %d" % count)
         # keep track of puzzles, cells set by each ant, and starting positions
         puzzle_copies = []
         cells_set = np.zeros(m)
@@ -95,11 +93,13 @@ def aco(puzzle):
                     copy.value_sets[cur_pos] = [ants_choice]
                     # propagate constraints
                     t0 = time.time()
-                    fixed, failed = propagate_constraints(copy)
-                    #cells_set[ant_idx] += fixed
+                    fixed = propagate_constraints(copy, 0)
                     while fixed != 0:
-                        fixed, failed = propagate_constraints(copy)
-                        #cells_set[ant_idx] += fixed
+                        fixed = propagate_constraints(copy, 0)
+                    # #cells_set[ant_idx] += fixed
+                    # while fixed != 0:
+                    #     fixed = propagate_constraints(copy, cur_pos)
+                    #     #cells_set[ant_idx] += fixed
                     cp_time = cp_time + (time.time() - t0)
                     # local pheromone update
                     pheromones[cur_pos][ants_choice-1] = (1 - zeta) * pheromones[cur_pos][ants_choice-1] + zeta * tau_0
@@ -115,10 +115,13 @@ def aco(puzzle):
         cells_set = [copy.filled() for copy in puzzle_copies]
         f_best = max(cells_set)
         delta_tau = 0
-        if f_best != 81:
+        if f_best != puzzle.d * puzzle.d:
             delta_tau = c / (c - f_best)
         else:
-            delta_tau = delta_tau_best + 1 # hacky
+            best_solution = puzzle_copies[np.argmax(cells_set)]
+            best_solution.print_puzzle()
+            return best_solution, count, cp_time
+
         if delta_tau > delta_tau_best:
             best_solution = puzzle_copies[np.argmax(cells_set)]
             delta_tau_best = delta_tau
@@ -127,8 +130,11 @@ def aco(puzzle):
         for vs in best_solution.value_sets:
             if len(vs) == 1:
                 fixed_count += 1
-        # print("Best ant fixed {}/{} cells \n".format(fixed_count, c))
-        #best_solution.print_puzzle()
+        # if count % 10 == 0:
+        #     print("Global Iteration %d" % count)
+        #     print("Best ant fixed {}/{} cells".format(fixed_count, c))
+        #     best_solution.print_puzzle()
+        #     print("\n")
         # global pheromone update
         for i in range(c):
             if len(best_solution.value_sets[i]) == 1:
@@ -141,75 +147,65 @@ def aco(puzzle):
     return best_solution, count, cp_time
 
 
-def propagate_constraints(puzzle):
-    # loop through all units
-    # if the unit is already fixed, continue
-    fixed_total = 0
-    failed_total = 0
-    for i in range(0, puzzle.d*puzzle.d):
-        if len(puzzle.value_sets[i]) != 1:
-            # get all fixed values from row, column, and box of the unit
+def propagate_constraints(puzzle, i):
+    row = puzzle.get_row(i)
+    column = puzzle.get_column(i)
+    box = puzzle.get_box(i)
+
+    for unit in set(row + column + box):
+        # TODO - replace with constant time lookup somehow
+        # another data structure in Sudoku class?
+
+        if unit != i and len(puzzle.value_sets[unit]) > 1:
             fixed_in_cell = set()
-            for x in range(i - i % puzzle.d, i - i % puzzle.d + puzzle.d, 1):
+            unit_row = puzzle.get_row(unit)
+            unit_col = puzzle.get_column(unit)
+            unit_box = puzzle.get_box(unit)
+            for x in unit_row:
                 if len(puzzle.value_sets[x]) == 1:
                     fixed_in_cell.add(puzzle.value_sets[x][0])
-            for x in range(i % puzzle.d, puzzle.d*puzzle.d,9):
+            for x in unit_col:
                 if len(puzzle.value_sets[x]) == 1:
                     fixed_in_cell.add(puzzle.value_sets[x][0])
-            # x + 3y
-            # x = (i%9)/3
-            # y = (i/9)/3
-            box_index = int((i % puzzle.d) / puzzle.cell_dim) + puzzle.cell_dim * int(int(i / puzzle.d) / puzzle.cell_dim)
-            #print(box_index)
-            for x in puzzle.get_box(box_index):
+            for x in unit_box:
                 if len(puzzle.value_sets[x]) == 1:
                     fixed_in_cell.add(puzzle.value_sets[x][0])
-            # update the unit's value set
-            #print(fixed_in_cell)
             for f in fixed_in_cell:
-                if f in puzzle.value_sets[i]:
-                    puzzle.value_sets[i].remove(f)
-
+                try:
+                    puzzle.value_sets[unit].remove(f)
+                except ValueError:
+                    pass
             # if unit is fixed
-            if len(puzzle.value_sets[i]) == 1:
-                fixed_total += 1
-                continue
+            if len(puzzle.value_sets[unit]) == 1:
+                return 1 + propagate_constraints(puzzle, unit)
 
-            # if unit is failed
-            if len(puzzle.value_sets[i]) == 0:
-                failed_total += 1
-
-            # if any value is the only one of its kind in a row, column, or box
-            for v in puzzle.value_sets[i]:
+            # check to see if unit contains any singleton values for its row/column
+            for v in puzzle.value_sets[unit]:
                 # check if v is in the row, column, box
                 # row
                 row_singleton = True
-                for x in range(i - i % puzzle.d, i - i % puzzle.d + puzzle.d, 1):
-                    if x != i and v in puzzle.value_sets[x]:
+                for x in unit_row:
+                    if x != unit and v in puzzle.value_sets[x]:
                         row_singleton = False
                 if row_singleton:
-                    puzzle.value_sets[i] = [v]
-                    fixed_total += 1
-                    break
+                    puzzle.value_sets[unit] = [v]
+                    return 1 + propagate_constraints(puzzle, unit)
 
                 # column
                 column_singleton = True
-                for x in range(i % puzzle.d, puzzle.d * puzzle.d, 9):
-                    if x != i and v in puzzle.value_sets[x]:
+                for x in unit_col:
+                    if x != unit and v in puzzle.value_sets[x]:
                         column_singleton = False
                 if column_singleton:
-                    puzzle.value_sets[i] = [v]
-                    fixed_total += 1
-                    break
+                    puzzle.value_sets[unit] = [v]
+                    return 1 + propagate_constraints(puzzle, unit)
 
                 # box
                 box_singleton = True
-                for x in puzzle.get_box(box_index):
-                    if x != i and v in puzzle.value_sets[x]:
+                for x in unit_box:
+                    if x != unit and v in puzzle.value_sets[x]:
                         box_singleton = False
                 if box_singleton:
-                    puzzle.value_sets[i] = [v]
-                    fixed_total += 1
-                    break
-    return fixed_total, failed_total
-
+                    puzzle.value_sets[unit] = [v]
+                    return 1 + propagate_constraints(puzzle, unit)
+    return 0

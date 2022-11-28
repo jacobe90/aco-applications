@@ -7,14 +7,22 @@ import time
 
 def sabuncu_initial_test():
     puzzle = Sudoku("sabuncu1.txt")
-    print("before:")
+    print("before {} filled:".format(puzzle.filled()))
     puzzle.print_puzzle()
     t1 = time.time()
-    while propagate_constraints(puzzle)[0] != 0:
-        print("ran")
-        continue
+    # while puzzle.filled() < 81:
+    # propagate_constraints(puzzle, 4)
+    j = 0
+    for i in range(0, 81):
+
+        if puzzle.filled() < 81:
+            print("ran {}".format(i))
+            j = propagate_constraints(puzzle, i)
+    # while propagate_constraints(puzzle, 4) != 0:
+    #     print("ran")
+    #     continue
     t2 = time.time()
-    print("after:")
+    print("after: {} filled".format(puzzle.filled()))
     puzzle.print_puzzle()
     print("took %d seconds", t2 - t1)
 
@@ -44,12 +52,13 @@ def test_cp():
     for vs in puzzle.value_sets:
         if len(vs) == 1:
             count += 1
-    fixed, failed = propagate_constraints(puzzle)
+    fixed = propagate_constraints(puzzle, 0)
     count += fixed
     while fixed != 0:
         print("fixed: %d cells"%fixed)
-        fixed, failed = propagate_constraints(puzzle)
+        fixed = propagate_constraints(puzzle, 0)
         count += fixed
+    puzzle.print_puzzle()
 
 def cp_bug():
     puzzle = Sudoku("", False)
@@ -74,6 +83,7 @@ def cp_bug():
             num_actually_fixed += 1
     print(num_originally_fixed + count)
     print(num_actually_fixed)
+
 
 def main():
     test_all_logic_solvable()
