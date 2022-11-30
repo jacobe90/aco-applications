@@ -12,7 +12,7 @@ class EuclideanTSP:
 
     def load(self, path):
         with open(path, 'r') as fin:
-            N = 8
+            N = 7
             header = [next(fin) for x in range(N)]
             self.name = header[0].split(" : ")[1]
             self.n_cities = int(header[4].split(" : ")[1])

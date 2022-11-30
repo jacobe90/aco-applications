@@ -30,35 +30,45 @@ def acs(tsp):
 
     # initialization phase
     pheromones = np.ones((tsp.n_cities, tsp.n_cities)) * tau_0
-    r_i = np.random.randint(tsp.n_cities, size=m) # ant starting positions
+    r_i = np.zeros(m, dtype=int) # r_i = np.random.randint(tsp.n_cities, size=m) # ant starting positions
     r = r_i.copy() # current positions of all the ants
     s = np.empty(m) # the next position of each ant
-    J = np.empty((m, tsp.n_cities), dtype=set)
+    J = np.empty((m, tsp.n_cities), dtype=list)
+    L_best = math.inf
+    best_tour = None
+    iters = 0
     for k in range(m):
-        cities_to_visit = set(range(tsp.n_cities))
+        cities_to_visit = list(range(tsp.n_cities))
         cities_to_visit.remove(r_i[k])
         J[k][r_i[k]] = cities_to_visit
 
-    while True:
+    while iters < 5000:
+        iters += 1
         # tour-building phase
-        Tour = np.empty((m, tsp.n), dtype=tuple)
+        Tour = np.empty((m, tsp.n_cities), dtype=tuple)
         for i in range(tsp.n_cities):
             if i < tsp.n_cities - 1:
                 for k in range(m):
                     # choose s[k]
                     q = np.random.uniform(0, 1)
                     if q < q_0:
-                        idx = np.argmax(np.asarray(map(lambda u: tsp.distances[r[k]][u] * ((1/tsp.distances[r[k]][u]) ** beta),
-                                                 J[k][r[k]])))
+                        jman = (map(lambda u: tsp.distances[r[k]][u] * ((1 / tsp.distances[r[k]][u]) ** beta),
+                                       J[k][r[k]]))
+                        idx = np.argmax(np.asarray(list(map(lambda u: tsp.distances[r[k]][u] * ((1/tsp.distances[r[k]][u]) ** beta),
+                                                 J[k][r[k]]))))
+                        #print(idx)
                         s[k] = J[k][r[k]][idx]
                     else:
                         total = sum(list(map(lambda u: tsp.distances[r[k]][u] * ((1/tsp.distances[r[k]][u]) ** beta),
                                              J[k][r[k]])))
-                        probabilities = [tsp.distances[r[k]][u] for u in J[k][r[k]]]
+                        probabilities = [tsp.distances[r[k]][u] * ((1/tsp.distances[r[k]][u]) ** beta) / total for u in J[k][r[k]]]
                         s[k] = np.random.choice(J[k][r[k]], p=probabilities)
+                        jman_is_cool = s[k]
                     remaining = J[k][r[k]].copy()
                     remaining.remove(s[k])
-                    J[k][s[k]] = remaining
+                    c = J[k]
+                    d = s[k]
+                    J[k][int(s[k])] = remaining
                     Tour[k][i] = (r[k], s[k])
             else:
                 for k in range(m):
@@ -68,7 +78,8 @@ def acs(tsp):
 
             # local updating phase
             for k in range(m):
-                pheromones[r[k]][s[k]] = (1 - rho) * pheromones[r[k]][s[k]] + rho * tau_0 # Canonical ACS local update
+                # jacob = (1 - rho) * pheromones[int(r[k])][int(s[k])] + rho * tau_0
+                pheromones[r[k]][int(s[k])] = (1 - rho) * pheromones[r[k]][int(s[k])] + rho * tau_0 # Canonical ACS local update
                 r[k] = s[k] # move ant to the next city
 
         # global update phase
@@ -76,13 +87,17 @@ def acs(tsp):
         # tour - array of tuples
         L = np.empty(m)
         for k in range(m):
-            L[k] = sum(list(map(lambda edge: tsp.distances[edge[0]][edge[1]], Tour[k])))
-        best_tour = Tour[np.argmin(L)]
-        L_best = np.max(L)
+            L[k] = sum(list(map(lambda edge: tsp.distances[int(edge[0])][int(edge[1])], Tour[k])))
+        L_max = np.min(L)
+        if L_max < L_best:
+            L_best = L_max
+            best_tour = Tour[np.argmin(L)]
         for i in range(tsp.n_cities):
             for j in range(tsp.n_cities):
                 pheromones[i][j] = (1 - alpha) * pheromones[i][j]
         for edge in best_tour:
-            pheromones[edge[0]][edge[1]] += alpha * (1 / L_best)
+            pheromones[int(edge[0])][int(edge[1])] += alpha * (1 / L_best)
+        if iters % 100 == 0:
+            print("Iteration {}/5000".format(iters))
+    print("L_best is {}".format(L_best))
 
-        print("L_best is {}".format(L_best))
