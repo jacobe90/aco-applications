@@ -4,11 +4,13 @@ from tsp import EuclideanTSP
 import numpy as np
 
 # SUS List
-# what city should ants start at?
-# no tau_0 calculation
+# what cit(y)(ies) SHOULD the ants start at?
+# why have I not added a visualization?
+# shouldn't precalculate distance function for large datasets
 
 
-def acs(tsp):
+def acs(tsp, n_iters, get_animation=False):
+    best_tours = []
     # hyperparameters
     beta = 2
     q_0 = 0.9
@@ -30,9 +32,9 @@ def acs(tsp):
 
     # initialization phase
     pheromones = np.ones((tsp.n_cities, tsp.n_cities)) * tau_0
-    r_i = np.zeros(m, dtype=int) # r_i = np.random.randint(tsp.n_cities, size=m) # ant starting positions
+    r_i = np.random.randint(tsp.n_cities, size=m) # ant starting positions
     r = r_i.copy() # current positions of all the ants
-    s = np.empty(m) # the next position of each ant
+    s = np.empty(m, dtype=int) # the next position of each ant
     J = np.empty((m, tsp.n_cities), dtype=list)
     L_best = math.inf
     best_tour = None
@@ -42,7 +44,7 @@ def acs(tsp):
         cities_to_visit.remove(r_i[k])
         J[k][r_i[k]] = cities_to_visit
 
-    while iters < 5000:
+    while iters < n_iters:
         iters += 1
         # tour-building phase
         Tour = np.empty((m, tsp.n_cities), dtype=tuple)
@@ -98,6 +100,8 @@ def acs(tsp):
         for edge in best_tour:
             pheromones[int(edge[0])][int(edge[1])] += alpha * (1 / L_best)
         if iters % 100 == 0:
-            print("Iteration {}/5000".format(iters))
+            print("Iteration {}/5000, current best tour is size {}".format(iters, L_best))
+        if iters % int(n_iters / 10) == 0 and get_animation:
+            best_tours.append(best_tour.copy())
     print("L_best is {}".format(L_best))
-
+    return best_tour if not get_animation else best_tours

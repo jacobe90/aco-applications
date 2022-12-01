@@ -1,6 +1,7 @@
 import numpy as np
 import math
 
+
 class EuclideanTSP:
     def __init__(self, path):
         self.name = None
@@ -26,3 +27,4 @@ class EuclideanTSP:
                 x = self.V[i]
                 y = self.V[j]
                 self.distances[i][j] = math.sqrt((x[0] - y[0])**2 + (x[1] - y[1])**2)
+
