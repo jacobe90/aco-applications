@@ -5,8 +5,8 @@ import numpy as np
 
 # SUS List
 # what cit(y)(ies) SHOULD the ants start at?
-# why have I not added a visualization?
-# shouldn't precalculate distance function for large datasets
+# cooler visualization - actually show how the pheromone strengths change over time
+print("")
 
 
 def acs(tsp, n_iters, get_animation=False):
@@ -24,11 +24,11 @@ def acs(tsp, n_iters, get_animation=False):
     cur = 0
     tbv.remove(cur)
     while len(tbv) > 0:
-        next_city = tbv[np.argmin(np.asarray(map(lambda c: tsp.distances[cur][c], tbv)))]
-        tau_0 += tsp.distances[cur][next_city]
+        next_city = tbv[np.argmin(np.asarray(map(lambda c: tsp.distance(cur, c), tbv)))]
+        tau_0 += tsp.distance(cur, next_city)
         cur = next_city
         tbv.remove(cur)
-    tau_0 += tsp.distances[cur][0]
+    tau_0 += tsp.distance(cur, 0)
 
     # initialization phase
     pheromones = np.ones((tsp.n_cities, tsp.n_cities)) * tau_0
@@ -49,21 +49,22 @@ def acs(tsp, n_iters, get_animation=False):
         # tour-building phase
         Tour = np.empty((m, tsp.n_cities), dtype=tuple)
         for i in range(tsp.n_cities):
+            # print("city {}/{}", i, tsp.n_cities)
             if i < tsp.n_cities - 1:
                 for k in range(m):
                     # choose s[k]
                     q = np.random.uniform(0, 1)
                     if q < q_0:
-                        jman = (map(lambda u: tsp.distances[r[k]][u] * ((1 / tsp.distances[r[k]][u]) ** beta),
+                        jman = (map(lambda u: tsp.distances[r[k]][u] * ((1 / tsp.distance(r[k], u)) ** beta),
                                        J[k][r[k]]))
-                        idx = np.argmax(np.asarray(list(map(lambda u: tsp.distances[r[k]][u] * ((1/tsp.distances[r[k]][u]) ** beta),
+                        idx = np.argmax(np.asarray(list(map(lambda u: tsp.distance(r[k], u) * ((1/tsp.distance(r[k], u)) ** beta),
                                                  J[k][r[k]]))))
                         #print(idx)
                         s[k] = J[k][r[k]][idx]
                     else:
-                        total = sum(list(map(lambda u: tsp.distances[r[k]][u] * ((1/tsp.distances[r[k]][u]) ** beta),
+                        total = sum(list(map(lambda u: tsp.distance(r[k], u) * ((1/tsp.distance(r[k], u)) ** beta),
                                              J[k][r[k]])))
-                        probabilities = [tsp.distances[r[k]][u] * ((1/tsp.distances[r[k]][u]) ** beta) / total for u in J[k][r[k]]]
+                        probabilities = [tsp.distance(r[k], u) * ((1/tsp.distance(r[k], u)) ** beta) / total for u in J[k][r[k]]]
                         s[k] = np.random.choice(J[k][r[k]], p=probabilities)
                         jman_is_cool = s[k]
                     remaining = J[k][r[k]].copy()
@@ -89,7 +90,7 @@ def acs(tsp, n_iters, get_animation=False):
         # tour - array of tuples
         L = np.empty(m)
         for k in range(m):
-            L[k] = sum(list(map(lambda edge: tsp.distances[int(edge[0])][int(edge[1])], Tour[k])))
+            L[k] = sum(list(map(lambda edge: tsp.distance(int(edge[0]), int(edge[1])), Tour[k])))
         L_max = np.min(L)
         if L_max < L_best:
             L_best = L_max
@@ -99,8 +100,8 @@ def acs(tsp, n_iters, get_animation=False):
                 pheromones[i][j] = (1 - alpha) * pheromones[i][j]
         for edge in best_tour:
             pheromones[int(edge[0])][int(edge[1])] += alpha * (1 / L_best)
-        if iters % 100 == 0:
-            print("Iteration {}/5000, current best tour is size {}".format(iters, L_best))
+        # if iters % 1 == 0:
+        print("Iteration {}/5000, current best tour is size {}".format(iters, L_best))
         if iters % int(n_iters / 10) == 0 and get_animation:
             best_tours.append(best_tour.copy())
     print("L_best is {}".format(L_best))

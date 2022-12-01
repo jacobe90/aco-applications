@@ -9,7 +9,7 @@ class EuclideanTSP:
         self.V = []
         self.load(path)
         self.distances = np.empty((self.n_cities, self.n_cities))
-        self.calc_distances()
+        # self.calc_distances()
 
     def load(self, path):
         with open(path, 'r') as fin:
@@ -20,6 +20,14 @@ class EuclideanTSP:
             self.V = [next(fin).split(" ")[1:] for x in range(self.n_cities)]
             self.V = list(filter(lambda a: len(a) > 1, self.V))
             self.V = list(map(lambda a: (float(a[0]), float(a[1].strip('\n'))) if len(a) > 1 else None, self.V))
+
+    def distance(self, i, j):
+        x = self.V[i]
+        y = self.V[j]
+        dist = math.sqrt((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2)
+        if dist == 0:
+            return 0.001
+        return dist
 
     def calc_distances(self):
         for i in range(self.n_cities):

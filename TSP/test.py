@@ -1,6 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
+
 def main():
     plt.axis([-50,50,0,10000])
     #plt.ion()
@@ -13,6 +14,7 @@ def main():
         plt.draw()
         plt.pause()
         #input("Press [enter] to continue.")
+
 
 if __name__ == '__main__':
     main()
