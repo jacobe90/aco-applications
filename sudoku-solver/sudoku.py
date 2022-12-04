@@ -23,6 +23,9 @@ class Sudoku:
         self.cell_dim = int(lines[0])
         self.d = int(lines[0])*int(lines[0])
         self.something = int(lines[1])
+
+        self.value_sets = [[x for x in range(1, self.d+1)] for y in range(self.d * self.d)]
+
         count = 0
         for i in range(2, 2+self.d, 1):
             row = lines[i].split("\t")
@@ -30,10 +33,9 @@ class Sudoku:
                 if num == '\n':
                     continue
                 n = int(num)
-                if n == -1:
-                    self.value_sets.append([z for z in range(1, self.d+1)])
-                else:
-                    self.value_sets.append([int(n)])
+                if n != -1:
+                    self.assign(count, n)
+                count += 1
 
     def copy(self):
         copy = Sudoku(None, False)
@@ -45,6 +47,39 @@ class Sudoku:
             newvs = [v for v in vs]
             copy.value_sets.append(newvs)
         return copy
+
+    # assign [d] to puzzle.value_sets[i]
+    def assign(self, i, d):
+        other_vals = list(filter(lambda v: v != d, self.value_sets[i]))
+        return all(self.eliminate(i, other_val) for other_val in other_vals)
+
+    # eliminate d from puzzle.value_sets[i]
+    def eliminate(self, i, d):
+        if d not in self.value_sets[i]:
+            return True
+        self.value_sets[i].remove(d)
+        if len(self.value_sets[i]) == 0:
+            return False
+        elif len(self.value_sets[i]) == 1:
+            d2 = self.value_sets[i][0]
+            if not all(self.eliminate(i2, d2) for i2 in self.peers(i)):
+                return False
+        for u in self.units(i):
+            dplaces = [s for s in u if d in self.value_sets[s]]
+            if len(dplaces) == 0:
+                return False
+            elif len(dplaces) == 1:
+                if not self.assign(dplaces[0], d):
+                    return False
+        return True
+
+    def units(self, i):
+        return [self.get_box(i), self.get_row(i), self.get_column(i)]
+
+    def peers(self, i):
+        peers = list(set(self.get_box(i) + self.get_row(i) + self.get_column(i)))
+        peers.remove(i)
+        return peers
 
     def filled(self):
         filled = 0

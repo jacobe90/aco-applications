@@ -1,32 +1,6 @@
-# TODO
-# constraint propagation
-# aco algorithm
-# convert everything to numpy
-
-# SUS List
-# add get row, get column, get box functions DONE
-# need to initialize ants to all different locations in the puzzle DONE
-# need to track fail cells when doing constraint propagation DONE
-
-# Potential problems to investigate
-# math for updating pheromones could be wrong
-# constraint propagation messed up?
 import time
-
-import mpmath
 import numpy as np
-import math
 import random
-
-# class Ant:
-#     def __int__(self, puzzle, idx):
-#         self.puzzle = puzzle
-#         self.idx = idx # current index of ant in the sudoku
-#         self.cells_set = 0
-#
-#     def step():
-#
-#         idx += 1
 
 
 def aco(puzzle):
@@ -45,11 +19,7 @@ def aco(puzzle):
     d = puzzle.d # puzzle dimension
 
     cp_time = 0
-    # constraint propagation on puzzle
-    t0 = time.time()
-    propagate_constraints(puzzle, 0)
-    cp_time = cp_time + (time.time() - t0)
-    # copy the puzzle
+
     best_solution = puzzle.copy()
     f_start = 0
     for vs in puzzle.value_sets:
@@ -90,12 +60,9 @@ def aco(puzzle):
                             sum += pheromones[cur_pos][x-1]
                         probabilities = [pheromones[cur_pos][x-1]/sum for x in vs]
                         ants_choice = np.random.choice(vs, p=probabilities)
-                    copy.value_sets[cur_pos] = [ants_choice]
                     # propagate constraints
                     t0 = time.time()
-                    fixed = propagate_constraints(copy, 0)
-                    while fixed != 0:
-                        fixed = propagate_constraints(copy, 0)
+                    copy.assign(cur_pos, ants_choice)
                     # #cells_set[ant_idx] += fixed
                     # while fixed != 0:
                     #     fixed = propagate_constraints(copy, cur_pos)
@@ -146,66 +113,3 @@ def aco(puzzle):
 
     return best_solution, count, cp_time
 
-
-def propagate_constraints(puzzle, i):
-    row = puzzle.get_row(i)
-    column = puzzle.get_column(i)
-    box = puzzle.get_box(i)
-
-    for unit in set(row + column + box):
-        # TODO - replace with constant time lookup somehow
-        # another data structure in Sudoku class?
-
-        if unit != i and len(puzzle.value_sets[unit]) > 1:
-            fixed_in_cell = set()
-            unit_row = puzzle.get_row(unit)
-            unit_col = puzzle.get_column(unit)
-            unit_box = puzzle.get_box(unit)
-            for x in unit_row:
-                if len(puzzle.value_sets[x]) == 1:
-                    fixed_in_cell.add(puzzle.value_sets[x][0])
-            for x in unit_col:
-                if len(puzzle.value_sets[x]) == 1:
-                    fixed_in_cell.add(puzzle.value_sets[x][0])
-            for x in unit_box:
-                if len(puzzle.value_sets[x]) == 1:
-                    fixed_in_cell.add(puzzle.value_sets[x][0])
-            for f in fixed_in_cell:
-                try:
-                    puzzle.value_sets[unit].remove(f)
-                except ValueError:
-                    pass
-            # if unit is fixed
-            if len(puzzle.value_sets[unit]) == 1:
-                return 1 + propagate_constraints(puzzle, unit)
-
-            # check to see if unit contains any singleton values for its row/column
-            for v in puzzle.value_sets[unit]:
-                # check if v is in the row, column, box
-                # row
-                row_singleton = True
-                for x in unit_row:
-                    if x != unit and v in puzzle.value_sets[x]:
-                        row_singleton = False
-                if row_singleton:
-                    puzzle.value_sets[unit] = [v]
-                    return 1 + propagate_constraints(puzzle, unit)
-
-                # column
-                column_singleton = True
-                for x in unit_col:
-                    if x != unit and v in puzzle.value_sets[x]:
-                        column_singleton = False
-                if column_singleton:
-                    puzzle.value_sets[unit] = [v]
-                    return 1 + propagate_constraints(puzzle, unit)
-
-                # box
-                box_singleton = True
-                for x in unit_box:
-                    if x != unit and v in puzzle.value_sets[x]:
-                        box_singleton = False
-                if box_singleton:
-                    puzzle.value_sets[unit] = [v]
-                    return 1 + propagate_constraints(puzzle, unit)
-    return 0
