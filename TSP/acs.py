@@ -7,7 +7,10 @@ import numpy as np
 # cooler visualization - actually show how the pheromone strengths change over time
 
 
-def acs(tsp, n_iters, get_animation=False, local_search=True):
+def acs(tsp, n_iters, get_animation=False, local_search=True, save_to_file = None):
+    stf = None
+    if not save_to_file == None:
+        stf = open(save_to_file, "w")
     best_tours = []
     # hyperparameters
     beta = 2
@@ -27,7 +30,7 @@ def acs(tsp, n_iters, get_animation=False, local_search=True):
         cur = next_city
         tbv.remove(cur)
     tau_0 += tsp.distance(cur, 0)
-
+    tau_0 = 1/(tsp.n_cities * tau_0)
     # initialization phase
     pheromones = np.ones((tsp.n_cities, tsp.n_cities)) * tau_0
     r_i = np.random.randint(tsp.n_cities, size=m)  # ant starting positions
@@ -95,10 +98,17 @@ def acs(tsp, n_iters, get_animation=False, local_search=True):
         L = np.empty(m)
         for k in range(m):
             L[k] = sum(list(map(lambda edge: tsp.distance(int(edge[0]), int(edge[1])), Tour[k])))
-        L_max = np.min(L)
-        if L_max < L_best:
-            L_best = L_max
+        L_min = np.min(L)
+        if L_min < L_best:
+            L_best = L_min
             best_tour = Tour[np.argmin(L)]
+            if save_to_file is not None:
+                for city in best_tour:
+                    stf.write("{},{} ".format(city[0], city[1]))
+                stf.write("\n")
+        if L_min >= L_best and save_to_file is not None:
+            stf.write("same\n")
+
         for i in range(tsp.n_cities):
             for j in range(tsp.n_cities):
                 pheromones[i][j] = (1 - alpha) * pheromones[i][j]
@@ -108,6 +118,8 @@ def acs(tsp, n_iters, get_animation=False, local_search=True):
         print("Iteration {}/5000, current best tour is size {}".format(iters, L_best))
         if iters % int(n_iters / 10) == 0 and get_animation:
             best_tours.append(best_tour.copy())
+
+    stf.close()
     print("L_best is {}".format(L_best))
     return best_tour if not get_animation else best_tours
 
@@ -150,7 +162,7 @@ def three_opt(tsp, tour):
             count += 1
             # print("checking segment {}/{}".format(count, n))
             delta += reverse_segment_if_better(tsp, tour, a, b, c)
-        #print("tour: {}".format(tour))
+            #print("tour: {}".format(tour))
         #print("call {} finished!".format(call_count))
         #print("delta is {}".format(delta))
         if delta >= 0:

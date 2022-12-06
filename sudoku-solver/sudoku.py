@@ -14,6 +14,8 @@ class Sudoku:
         self.cell_dim = None
         self.something = None
         self.value_sets = []
+        self.peers_list = []
+        self.units_list = []
         if load:
             self.load_puzzle(path)
 
@@ -25,6 +27,10 @@ class Sudoku:
         self.something = int(lines[1])
 
         self.value_sets = [[x for x in range(1, self.d+1)] for y in range(self.d * self.d)]
+
+        for i in range(self.d * self.d):
+            self.units_list.append(self.units(i))
+            self.peers_list.append(self.peers(i))
 
         count = 0
         for i in range(2, 2+self.d, 1):
@@ -46,6 +52,8 @@ class Sudoku:
         for vs in self.value_sets:
             newvs = [v for v in vs]
             copy.value_sets.append(newvs)
+        copy.units_list = self.units_list.copy()
+        copy.peers_list = self.peers_list.copy()
         return copy
 
     # assign [d] to puzzle.value_sets[i]
@@ -62,9 +70,9 @@ class Sudoku:
             return False
         elif len(self.value_sets[i]) == 1:
             d2 = self.value_sets[i][0]
-            if not all(self.eliminate(i2, d2) for i2 in self.peers(i)):
+            if not all(self.eliminate(i2, d2) for i2 in self.peers_list[i]):
                 return False
-        for u in self.units(i):
+        for u in self.units_list[i]:
             dplaces = [s for s in u if d in self.value_sets[s]]
             if len(dplaces) == 0:
                 return False

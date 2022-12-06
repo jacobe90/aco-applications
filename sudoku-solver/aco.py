@@ -31,6 +31,7 @@ def aco(puzzle):
     pheromones.fill(tau_0)
 
     count = 0
+    t_start = time.time()
     while not best_solution.solved():
         count += 1
         # keep track of puzzles, cells set by each ant, and starting positions
@@ -53,7 +54,7 @@ def aco(puzzle):
                     ants_choice = None
                     if q < q_0:
                         j = pheromones[cur_pos]
-                        ants_choice = max(vs, key=lambda x:(pheromones[cur_pos][x-1])) # BUG - this is wrong. surprised things are still working so well
+                        ants_choice = max(vs, key=lambda x: pheromones[cur_pos][x-1]) # BUG - this is wrong. surprised things are still working so well
                     else:
                         sum = 0
                         for x in vs:
@@ -110,6 +111,8 @@ def aco(puzzle):
 
         # best value evaporation
         delta_tau_best = delta_tau_best * (1 - rho_bve)
-
+        if time.time() - t_start > 0.05:
+            # print("running again")
+            return aco(puzzle)
     return best_solution, count, cp_time
 

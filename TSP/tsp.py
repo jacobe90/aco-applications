@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from matplotlib import pyplot as plt
 
 
 class EuclideanTSP:
@@ -36,3 +37,37 @@ class EuclideanTSP:
                 y = self.V[j]
                 self.distances[i][j] = math.sqrt((x[0] - y[0])**2 + (x[1] - y[1])**2)
 
+    def animate_from_file(self, file):
+        tours = []
+        with open(file) as acs_trace:
+            cur_line = acs_trace.readline()
+            tours = []
+            count = 0
+            while cur_line:
+                count += 1
+                print("reading line {}".format(count))
+                if not cur_line == "same\n":
+                    print("cur line is {}, len {}".format(cur_line, len(cur_line)))
+                    tours.append(list(map(lambda s: tuple(map(lambda x: int(x), s.split(","))), list(filter(lambda a: a!='\n', cur_line.split(" "))))))
+                # else:
+                #     tours.append(tours[-1])
+                cur_line = acs_trace.readline()
+        plt.plot([x for x in list(map(lambda p: p[0], self.V))], [y for y in list(map(lambda p: p[1], self.V))],
+                 'ro')
+        plt.show(block=False)
+        n_iters = len(tours)
+        count = 1
+        for best_tour in tours:
+            plt.clf()
+            plt.title("tour length: {}".format(sum(list(map(lambda tup: self.distance(tup[0], tup[1]), best_tour)))))
+            plt.plot([x for x in list(map(lambda p: p[0], self.V))], [y for y in list(map(lambda p: p[1], self.V))],
+                     'ro')
+            x = list(map(lambda p: self.V[p[0]], best_tour))
+            y = list(map(lambda p: self.V[p[1]], best_tour))
+            for i in range(self.n_cities):
+                plt.plot([x[i][0], y[i][0]], [x[i][1], y[i][1]], 'b-')
+            plt.draw()
+            input("Press Enter to continue...")
+            plt.pause(1)
+            count += 1
+        input("press enter bud")
