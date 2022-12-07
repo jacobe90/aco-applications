@@ -48,7 +48,7 @@ def qatar():
     plt.plot([x for x in list(map(lambda p: p[0], etsp.V))], [y for y in list(map(lambda p: p[1], etsp.V))], 'ro')
     plt.show(block=False)
     n_iters = 100
-    best_tours = acs(etsp, n_iters, get_animation=True, local_search=False)
+    best_tours = acs(etsp, n_iters, get_animation=True, local_search=True)
     count = 0
     for best_tour in best_tours:
         plt.clf()
@@ -82,6 +82,7 @@ def usa():
         plt.pause(1)
         count += n_iters / 10
 
+
 def save_and_play_full_run():
     etsp = EuclideanTSP("qa194.tsp")
     acs(etsp, 5000, local_search=False, save_to_file="qatar_run.txt")
@@ -108,11 +109,17 @@ def sahara_without_3opt():
     # acs(etsp, 352, local_search=False, save_to_file="sahara_wo_run.txt")
     etsp.animate_from_file("sahara_wo_run.txt")
 
+
 def main():
-    etsp = EuclideanTSP("wi29.tsp")
-    acs(etsp, 5000, local_search=True, save_to_file="sahara_run.txt")
+    etsp = EuclideanTSP("zi929.tsp")
+    acs(etsp, 5000, local_search=True, save_to_file="zimbabwe_run.txt")
     print(etsp.V)
 
 
+def play_zimbabwe():
+    etsp = EuclideanTSP("zi929.tsp")
+    etsp.animate_from_file("zimbabwe_run.txt")
+
+
 if __name__ == "__main__":
-    sahara_without_3opt()
+    main()

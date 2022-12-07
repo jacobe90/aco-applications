@@ -1,6 +1,6 @@
 import math
 import numpy as np
-
+import time
 
 # SUS List
 # what cit(y)(ies) SHOULD the ants start at?
@@ -46,34 +46,36 @@ def acs(tsp, n_iters, get_animation=False, local_search=True, save_to_file = Non
         J[k][r_i[k]] = cities_to_visit
 
     while iters < n_iters:
+        t0 = time.time()
         iters += 1
         # tour-building phase
         Tour = np.empty((m, tsp.n_cities), dtype=tuple)
         for i in range(tsp.n_cities):
-            # print("city {}/{}", i, tsp.n_cities)
+            # print("move {}/{}", i, tsp.n_cities)
             if i < tsp.n_cities - 1:
                 for k in range(m):
                     # choose s[k]
                     q = np.random.uniform(0, 1)
                     if q < q_0:
-                        jman = (map(lambda u: tsp.distances[r[k]][u] * ((1 / tsp.distance(r[k], u)) ** beta),
-                                    J[k][r[k]]))
-                        idx = np.argmax(
-                            np.asarray(list(map(lambda u: tsp.distance(r[k], u) * ((1 / tsp.distance(r[k], u)) ** beta),
-                                                J[k][r[k]]))))
+                        candidates = list(filter(lambda cand: cand in J[k][r[k]], tsp.candidates[r[k]]))
+                        if len(candidates) == 0:
+                            candidates = J[k][r[k]]
+                        jman = np.asarray(list(map(lambda u: tsp.distance(r[k], u) * ((1 / tsp.distance(r[k], u)) ** beta),
+                                                candidates)))
+                        idx = np.argmax(jman)
                         # print(idx)
-                        s[k] = J[k][r[k]][idx]
+                        s[k] = candidates[idx]
                     else:
+                        candidates = list(filter(lambda cand: cand in J[k][r[k]], tsp.candidates[r[k]]))
+                        if len(candidates) == 0:
+                            candidates = J[k][r[k]]
                         total = sum(list(map(lambda u: tsp.distance(r[k], u) * ((1 / tsp.distance(r[k], u)) ** beta),
-                                             J[k][r[k]])))
+                                             candidates)))
                         probabilities = [tsp.distance(r[k], u) * ((1 / tsp.distance(r[k], u)) ** beta) / total for u in
-                                         J[k][r[k]]]
-                        s[k] = np.random.choice(J[k][r[k]], p=probabilities)
-                        jman_is_cool = s[k]
+                                         candidates]
+                        s[k] = np.random.choice(candidates, p=probabilities)
                     remaining = J[k][r[k]].copy()
                     remaining.remove(s[k])
-                    c = J[k]
-                    d = s[k]
                     J[k][int(s[k])] = remaining
                     Tour[k][i] = (r[k], s[k])
             else:
@@ -84,14 +86,13 @@ def acs(tsp, n_iters, get_animation=False, local_search=True, save_to_file = Non
 
             # local updating phase
             for k in range(m):
-                # jacob = (1 - rho) * pheromones[int(r[k])][int(s[k])] + rho * tau_0
                 pheromones[r[k]][int(s[k])] = (1 - rho) * pheromones[r[k]][
                     int(s[k])] + rho * tau_0  # Canonical ACS local update
                 r[k] = s[k]  # move ant to the next city
 
         # TODO - Apply 3-opt to each tour
-        if local_search:
-            Tour = list((map(lambda tour: three_opt(tsp, tour), Tour)))
+        # if local_search:
+        #     Tour = list((map(lambda tour: three_opt(tsp, tour), Tour)))
         # global update phase
         # Tour - array of tours
         # tour - array of tuples
@@ -115,7 +116,7 @@ def acs(tsp, n_iters, get_animation=False, local_search=True, save_to_file = Non
         for edge in best_tour:
             pheromones[int(edge[0])][int(edge[1])] += alpha * (1 / L_best)
         # if iters % 1 == 0:
-        print("Iteration {}/5000, current best tour is size {}".format(iters, L_best))
+        print("Iteration {}/5000, current best tour is size {}, took {} seconds".format(iters, L_best, time.time()-t0))
         if iters % int(n_iters / 10) == 0 and get_animation:
             best_tours.append(best_tour.copy())
 

@@ -10,7 +10,17 @@ class EuclideanTSP:
         self.V = []
         self.load(path)
         self.distances = np.empty((self.n_cities, self.n_cities))
+        self.candidates = []
+        self.load_candidate_list()
         # self.calc_distances()
+
+    def load_candidate_list(self):
+        for city in range(self.n_cities):
+            other_cities = list(filter(lambda x : x != city, list(range(self.n_cities))))
+            # sort other cities by dist
+            other_cities.sort(key=lambda c: self.distance(city, c))
+            # append to candidate list
+            self.candidates.append(other_cities[0:15])
 
     def load(self, path):
         with open(path, 'r') as fin:
@@ -68,6 +78,6 @@ class EuclideanTSP:
                 plt.plot([x[i][0], y[i][0]], [x[i][1], y[i][1]], 'b-')
             plt.draw()
             input("Press Enter to continue...")
-            plt.pause(1)
+            plt.pause(0.1)
             count += 1
         input("press enter bud")
