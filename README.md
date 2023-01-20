@@ -37,7 +37,7 @@ on [att48](https://people.sc.fsu.edu/~jburkardt/datasets/tsp/tsp.html):
 
 ## Future Plans
 - Ant Colony System becomes inefficient on instances of the TSP with >= 200 cities; Dorigo and Gambardella propose curbing these issues with some sort of local optimization procedure (they use 3-opt). An implementation of 3-opt was begun; thorough testing is needed
-- Lloyd and Amos tested their sudoku solver on hard 12x12 instance; I plan on eventually doing this as well
+- Lloyd and Amos tested their sudoku solver on hard 12x12 instances; I plan on eventually doing this as well
 
 ## sources
 - [Solving Sudoku With Ant Colony Optimization (Lloyd and Amos)](https://ieeexplore.ieee.org/document/8845599)
