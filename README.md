@@ -16,7 +16,7 @@ To run the sudoku solver on 16 hard 9x9 sudoku instances (the famous [aiescargot
 cd sudoku-solver
 python main.py
 ```
-To run Ant Colony System for 5000 iterations on [wi29](https://www.math.uwaterloo.ca/tsp/world/wipoints.html), an instance of the Euclidean travelling salesman problem with 29 cities, navigate to the project directory and execute the following command:
+To run Ant Colony System for 5000 iterations on [wi29](https://www.math.uwaterloo.ca/tsp/world/wipoints.html), an instance of the Euclidean travelling salesman problem with 29 cities, navigate to the project directory and execute the following commands:
 ```
 cd TSP
 python main.py
