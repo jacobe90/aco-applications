@@ -7,7 +7,7 @@ def wi29_visualization():
     etsp = EuclideanTSP("wi29.tsp")
     plt.plot([x for x in list(map(lambda p: p[0], etsp.V))], [y for y in list(map(lambda p: p[1], etsp.V))], 'ro')
     plt.show(block=False)
-    n_iters = 50
+    n_iters = 1000
     best_tours = acs(etsp, n_iters, get_animation=True)
     count = 0
     for best_tour in best_tours:
@@ -122,4 +122,4 @@ def play_zimbabwe():
 
 
 if __name__ == "__main__":
-    play_zimbabwe()
+    play_qatar()

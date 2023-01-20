@@ -119,8 +119,8 @@ def acs(tsp, n_iters, get_animation=False, local_search=True, save_to_file = Non
         print("Iteration {}/5000, current best tour is size {}, took {} seconds".format(iters, L_best, time.time()-t0))
         if iters % int(n_iters / 10) == 0 and get_animation:
             best_tours.append(best_tour.copy())
-
-    stf.close()
+    if not save_to_file == None:
+        stf.close()
     print("L_best is {}".format(L_best))
     return best_tour if not get_animation else best_tours
 
