@@ -5,7 +5,7 @@ Final project for UMass Amherst's CS 311H. This repository contains:
 - A python implementation of [Ant Colony System](https://ieeexplore.ieee.org/document/585892), an Ant Colony Optimization (ACO) algorithm that generates good solutions to instances of the travelling salesman problem, and a matplotlib visualization of the generated solutions
 - An implementation of the ACO algorithm for solving sudoku detailed in [Lloyd and Amos' 2020 paper](https://ieeexplore.ieee.org/document/585892)
 
-## Depedencies
+## Dependencies
 - python >= 3.6
 - numpy >= 1.16
 - matplotlib >= 3.34
